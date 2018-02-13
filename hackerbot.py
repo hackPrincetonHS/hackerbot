@@ -82,7 +82,7 @@ def handle_command(command, channel, user):
         if command.lower().startswith("socialfbt"):
             status = twitterapi.PostUpdate(command[8:])
             api = get_api(cfg)
-            msg = command[10]:]
+            msg = command[10:]
             status = api.put_wall_post(msg)
             response = "Posted " + command[10:] + " to facebook and twitter!"
         if command.lower().startswith("tell"):
