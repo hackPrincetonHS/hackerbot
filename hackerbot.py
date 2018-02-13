@@ -9,7 +9,6 @@ import json
 '''
 Built by Lincoln Roth for hackPHS
 Origianally built 2/12/2018
-
 hackerbot is a slack bot for running hackathons
 '''
 slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))#needs slack bot token generated for your bot
@@ -47,7 +46,6 @@ def parse_bot_commands(slack_events):
         Parses a list of events coming from the Slack RTM API to find bot commands.
         If a bot command is found, this function returns a tuple of command and channel.
         If its not found, then this function returns None, None.
-
     """
     for event in slack_events:
         if event["type"] == "message" and not "subtype" in event:
@@ -148,7 +146,7 @@ def handle_command(command, channel, user):
     if command.lower() == "thanks":
         response = "You're very welcome!"
 
-    if "make me an admin" in command:
+    if os.environ.get("ADMIN_PASSWORD_PHRASE") in command:
         admins.append(user)
         response = "You are now an admin!"
     if "mentor" in command:
