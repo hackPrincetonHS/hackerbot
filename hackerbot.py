@@ -5,31 +5,35 @@ from slackclient import SlackClient
 import datetime
 import twitter
 import facebook
+import json
+'''
+Built by Lincoln Roth for hackPHS
+Origianally built 2/12/2018
 
-slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
-twitterapi = twitter.Api(consumer_key=os.environ.get('TWITTER_CONSUMER_KEY'),
-                      consumer_secret=os.environ.get('TWITTER_CONSUMER_SECRET'),
-                      access_token_key=os.environ.get('TWITTER_ACCESS_TOKEN_KEY'),
-                      access_token_secret=os.environ.get('TWITTER_ACCESS_TOKEN_SECRET'))
-hackerbot_id = None
+hackerbot is a slack bot for running hackathons
+'''
+slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))#needs slack bot token generated for your bot
+twitterapi = twitter.Api(consumer_key=os.environ.get('TWITTER_CONSUMER_KEY'),#needs twitter consumer key for your twitter account
+                      consumer_secret=os.environ.get('TWITTER_CONSUMER_SECRET'),#needs twitter consumer secret key for your twitter account
+                      access_token_key=os.environ.get('TWITTER_ACCESS_TOKEN_KEY'),#needs twitter access token key for your twitter account
+                      access_token_secret=os.environ.get('TWITTER_ACCESS_TOKEN_SECRET'))#needs twitter access token secret key for your twitter account
+hackerbot_id = None#starts off as none, but it will get assigned later
 
 cfg = {
-"page_id"      : os.environ.get("FB_PAGE_ID"),  # Step 1
-"access_token" : os.environ.get("FB_PAGE_ACCESS_TOKEN")   # Step 3
+"page_id"      : os.environ.get("FB_PAGE_ID"),  # Page id from the about section on your fb page
+"access_token" : os.environ.get("FB_PAGE_ACCESS_TOKEN")   # From GraphAPI
 }
-admins = []
+admins = []#list of admins, soon to be replaced with json
 RTM_READ_DELAY = 1 # 1 second delay between reading from RTM
-EXAMPLE_COMMAND = "help"
-MENTION_REGEX = "^<@(|[WU].+?)>(.*)"
-eventnames = ["hackPHS 2018"]
-eventtimes = [datetime.datetime(2018, 10, 6, 10)]
-privatechannelnames = ["organizers", "mentors", "sponsorship", "logistics", "outreach", ]
-privatechannelids = ["G8X0JFDDW", "G97J8D6GM", "G8X0JL256", "G97NNTC5T", "G8XP81HTP"]
+EXAMPLE_COMMAND = "help"#example command for when user enters something not related
+MENTION_REGEX = "^<@(|[WU].+?)>(.*)"#Regular expression to determine whether hackerbot was mentioned
+eventnames = ["hackPHS 2018"]#phasing out
+eventtimes = [datetime.datetime(2018, 10, 6, 10)]#phasing out
+privatechannelnames = ["organizers", "mentors", "sponsorship", "logistics", "outreach", ]#names of all the private channels hackerbot is in, since it cannot find them in channels.list
+privatechannelids = ["G8X0JFDDW", "G97J8D6GM", "G8X0JL256", "G97NNTC5T", "G8XP81HTP"]#ids of all the private channels hackerbot is in, since it cannot find them in channels.list
 
 def get_api(cfg):
   graph = facebook.GraphAPI(cfg['access_token'])
-  # Get page token to post as the page. You can skip
-  # the following if you want to post as yourself.
   resp = graph.get_object('me/accounts')
   page_access_token = None
   for page in resp['data']:
@@ -43,6 +47,7 @@ def parse_bot_commands(slack_events):
         Parses a list of events coming from the Slack RTM API to find bot commands.
         If a bot command is found, this function returns a tuple of command and channel.
         If its not found, then this function returns None, None.
+
     """
     for event in slack_events:
         if event["type"] == "message" and not "subtype" in event:
@@ -66,6 +71,8 @@ def handle_command(command, channel, user):
     """
     # Default response is help text for the user
     default_response = "Sorry, I don't know that. Try *How long until hackPHS*"
+
+
 
     # Finds and executes the given command, filling in response
     response = None
@@ -135,7 +142,7 @@ def handle_command(command, channel, user):
         if command.lower() == "help":#help NEEDS IMPROVED DOCUMENTATION LATER
             response = "hackerbot is here to help! Ask me a question and I'll try to answer."
         if command.lower() == "hi" or command.lower() == "howdy" or command.lower() == "hello":#Howdy!
-            response = "Hi <@{}>".format(user)
+            response = "Howdy <@{}>".format(user)
 
 
     if command.lower() == "thanks":
@@ -156,14 +163,14 @@ def handle_command(command, channel, user):
             response = "If you need a mentor, please ask hackerbot in the the form mentor: what you need help with"
     if command.lower() == "who wrote hackerbot":
         response = "<@U8YACG4MU>, if you have any questions, please dm him"
-    if "when is" in command or "when does" in command:
+    if "when is" in command:
         response = whenIs(command)
     if command.lower().startswith("how long until "):
         response = timeUntil(command)
     if command.lower() == "help":
         response = "Hackerbot is here to help! Ask me a question and I'll try to answer. Try *How long until hackPHS*"
     if command.lower() == "hi" or command.lower() == "howdy" or command.lower() == "hello":
-        response = "Hi <@{}>".format(user)
+        response = "Howdy <@{}>".format(user)
     if command.lower() == "thanks":
         response = "You're very welcome!"
     # Sends the response back to the channel
@@ -174,20 +181,43 @@ def handle_command(command, channel, user):
     )
 
 def whenIs(command):
+    event_data = open('events.json')
+
+    events = json.load(event_data)
+    for i in events["events"]:
+        print(i["name"])
+
+    for i in events["events"]:
+        if i["name"] in command.lower():
+            return (i["name"] + " is happening on " + i["date"] + " at " + i["time"])
     if "hackPHS 2018" in command:
         return "hackPHS will be returning October 6-7! Stay updated by visiting <http://hackphs.tech>"
 
 def timeUntil(command):
     print('howdy')
+    event_data = open('events.json')
+
+    events = json.load(event_data)
     event = command[15:]
-    print(event)
-    if event in eventnames:
-        response = eventtimes[eventnames.index(event)] - datetime.datetime.now()
-        seconds = response.seconds
-        m, s = divmod(seconds, 60)
-        h, m = divmod(m, 60)
-        response = str(response.days) + " days, "+ str(h) + " hours, "+ str(m) + " minutes, and "+ str(s) + " seconds"
-        return response
+    for i in events["events"]:
+        if i["name"] in event.lower():
+            date = i["date"].split('-')
+            year = int(date[0])
+            month = int(date[1])
+            day = int(date[2])
+            time = i["time"].split(':')
+            hour = int(time[0])
+            minute = int(time[1])
+            time = datetime.datetime(year, month, day, hour, minute)
+            print(time)
+            print(time)
+            print(event)
+            response = time - datetime.datetime.now()
+            seconds = response.seconds
+            m, s = divmod(seconds, 60)
+            h, m = divmod(m, 60)
+            response = str(response.days) + " days, "+ str(h) + " hours, "+ str(m) + " minutes, and "+ str(s) + " seconds"
+            return response
 
 if __name__ == "__main__":
     if slack_client.rtm_connect(with_team_state=False):
