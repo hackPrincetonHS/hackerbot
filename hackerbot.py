@@ -93,12 +93,7 @@ def handle_command(command, channel, user):
         if command.lower().startswith("tell"):
             channels = slack_client.api_call("channels.list")
             userlist = slack_client.api_call("users.list")
-            # print("users", userlist)
-            # print(channels["channels"])
-            #check private ones now
-            # print(command)
             for i in privatechannelnames:
-
 
                 if i in command:
                     response = command[command.index(i)+len(i):]
@@ -106,24 +101,16 @@ def handle_command(command, channel, user):
                     break
 
             for i in channels["channels"]:
-                print(i["name"])
-                print(command)
                 if i["name"] in command:
-                    print(command.index(i["name"]))
                     response = command[command.index(i["name"])+len(i["name"]):]
                     channel = i["id"]
                     break
 
             for i in userlist["members"]:
-                print(i["real_name"])
                 if i["real_name"] in command:
                     response = command[command.index(i["real_name"])+len(i["real_name"]):]
                     channel = i["id"]
-                    print(response)
-                    print("KJSDFKJLSDF", i["real_name"])
-                    print(channel)
                     break
-
 
         if command.lower().startswith("tell the organizers"):#tells hackerbot message to organizers channel
             response = command[20:]
@@ -214,7 +201,7 @@ def timeUntil(command):
             seconds = response.seconds
             m, s = divmod(seconds, 60)
             h, m = divmod(m, 60)
-            response = str(response.days) + " days, "+ str(h) + " hours, "+ str(m) + " minutes, and "+ str(s) + " seconds"
+            response = i["name"] + " will be happening in " + str(response.days) + " days, "+ str(h) + " hours, "+ str(m) + " minutes, and "+ str(s) + " seconds"
             return response
 
 if __name__ == "__main__":
