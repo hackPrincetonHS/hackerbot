@@ -148,7 +148,7 @@ def handle_command(command, channel, user):
     if command.lower() == "thanks":
         response = "You're very welcome!"
 
-    if os.environ.get("ADMIN_PASSWORD_PHRASE") in command:
+    if "make me an admin" in command:
         admins.append(user)
         response = "You are now an admin!"
     if "mentor" in command:
