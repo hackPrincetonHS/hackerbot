@@ -6,9 +6,10 @@ import datetime
 import twitter
 import facebook
 import json
+import urllib.request
 '''
 Built by Lincoln Roth for hackPHS
-Origianally built 2/12/2018
+Project started 2/12/2018
 hackerbot is a slack bot for running hackathons
 '''
 slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))#needs slack bot token generated for your bot
@@ -31,7 +32,7 @@ eventtimes = [datetime.datetime(2018, 10, 6, 10)]#phasing out
 privatechannelnames = ["organizers", "mentors", "sponsorship", "logistics", "outreach", ]#names of all the private channels hackerbot is in, since it cannot find them in channels.list
 privatechannelids = ["G8X0JFDDW", "G97J8D6GM", "G8X0JL256", "G97NNTC5T", "G8XP81HTP"]#ids of all the private channels hackerbot is in, since it cannot find them in channels.list
 
-def get_api(cfg):
+def get_api(cfg):#Gets api from Facebook, so we can post to our FB Page
   graph = facebook.GraphAPI(cfg['access_token'])
   resp = graph.get_object('me/accounts')
   page_access_token = None
@@ -180,9 +181,13 @@ def whenIs(command):
 
 def timeUntil(command):
     print('howdy')
-    event_data = open('events.json')
+    url = 'https://hackprincetonhs.github.io/hackPHS-2018/events.json'
+    with urllib.request.urlopen(url) as url:
+        events = json.loads(url.read().decode())
+    # event_data = open('events.json')
+    # events = json.load(event_data)
 
-    events = json.load(event_data)
+
     event = command[15:]
     for i in events["events"]:
         if i["name"] in event.lower():
@@ -205,11 +210,13 @@ def timeUntil(command):
             return response
 
 if __name__ == "__main__":
+
     if slack_client.rtm_connect(with_team_state=False):
         print("Hacker Bot connected and running!")
         # Read bot's user ID by calling Web API method `auth.test`
         hackerbot_id = slack_client.api_call("auth.test")["user_id"]
 
+        #Reads messages every second, and parses them and if hackerbot is mentioned in the message, it handles the command
         while True:
             reading = slack_client.rtm_read()
             print(parse_bot_commands(reading))
