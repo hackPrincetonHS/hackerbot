@@ -10,7 +10,7 @@ import urllib.request
 '''
 Built by Lincoln Roth for hackPHS
 Project started 2/12/2018
-hackerbot is a slack bot for running hackathons
+hackerbot is a slack bot for running hackathon
 '''
 slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))#needs slack bot token generated for your bot
 twitterapi = twitter.Api(consumer_key=os.environ.get('TWITTER_CONSUMER_KEY'),#needs twitter consumer key for your twitter account
